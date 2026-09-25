@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kodagu Flash Flood Early Warning Prototype</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef3f8;color:#15263a}
+header{background:#12304a;color:#fff;padding:24px 30px}
+header h1{margin:0 0 7px;font-size:28px}header p{margin:0;font-size:16px;opacity:.92}
+main{max-width:1180px;margin:20px auto;padding:0 16px}
+.grid{display:grid;grid-template-columns:1.35fr .85fr;gap:18px}
+.card{background:#fff;border-radius:15px;padding:20px;box-shadow:0 3px 16px #00000014}
+h2{margin:0 0 8px}.muted{color:#667085;font-size:13px}
+.map{height:430px;border-radius:12px;position:relative;overflow:hidden;background:linear-gradient(145deg,#dcebd7,#a9c79f)}
+.mountain{position:absolute;bottom:-35px;width:0;height:0;border-left:170px solid transparent;border-right:170px solid transparent;border-bottom:270px solid #71966f;opacity:.75}
+.m1{left:20px}.m2{left:290px;border-bottom-width:330px}.m3{right:-30px;border-bottom-width:285px}
+.river{position:absolute;left:52%;top:-30px;width:48px;height:510px;background:#65a3d5;transform:rotate(10deg);border-radius:50%}
+.zone{position:absolute;border-radius:50%;border:3px solid #b3261e;background:#e5393566}
+.z1{width:180px;height:125px;left:53%;top:55%}.z2{width:115px;height:90px;left:20%;top:30%;background:#ff980055;border-color:#d87800}
+.place{position:absolute;background:#fff;border:2px solid #263238;padding:5px 8px;border-radius:6px;font-size:12px;font-weight:bold}
+.p1{left:61%;top:73%}.p2{left:25%;top:48%}.p3{left:69%;top:33%}
+.badge{position:absolute;top:15px;left:15px;background:#fff;padding:8px 11px;border-radius:8px;font-weight:bold;box-shadow:0 2px 8px #0002}
+label{display:block;margin:15px 0 6px;font-weight:bold}.val{float:right;font-weight:normal}
+input[type=range]{width:100%}
+.risk{text-align:center;font-size:25px;font-weight:800;padding:15px;border-radius:11px;margin:18px 0 10px}
+.low{background:#d7f3df;color:#18794e}.moderate{background:#fff1bd;color:#806000}.high{background:#ffd9a8;color:#9a4b00}.critical{background:#ffcaca;color:#a40000}
+.score{font-size:16px;margin-bottom:12px}
+button{width:100%;padding:13px;margin-top:9px;border:0;border-radius:9px;background:#1769aa;color:#fff;font-size:16px;font-weight:bold;cursor:pointer}
+button:hover{background:#12598f}
+.alert{display:none;margin-top:13px;padding:13px;background:#fff0f0;border-left:5px solid #b3261e;border-radius:6px;line-height:1.45}
+.status{display:flex;justify-content:space-between;gap:8px;margin-top:12px;padding:11px;background:#edf1f5;border-radius:9px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}.kpi{padding:12px;background:#f5f7fa;border-radius:9px}.kpi b{display:block;font-size:20px;margin-top:5px}
+.workflow{margin-top:18px}.workflow span{display:inline-block;background:#edf5fb;padding:9px 12px;border-radius:8px;margin:4px;font-weight:bold}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}.map{height:350px}}
+</style>
+</head>
+<body>
+<header>
+<h1>🌧️ Flash Flood Early Warning System</h1>
+<p>Prototype deployment — Kodagu, Karnataka | Multi-source risk assessment for hilly regions</p>
+</header>
+<main>
+<div class="grid">
+<section class="card">
+<h2>📍 Live Risk Map — Kodagu</h2>
+<div class="muted">Representative prototype study area • Demo data</div>
+<div class="map">
+<div class="badge">KODAGU • FLOOD RISK MONITORING</div>
+<div class="mountain m1"></div><div class="mountain m2"></div><div class="mountain m3"></div>
+<div class="river"></div><div class="zone z1"></div><div class="zone z2"></div>
+<div class="place p1">Madikeri</div><div class="place p2">Somwarpet</div><div class="place p3">Virajpet</div>
+</div>
+<div class="status"><span>🟢 Low</span><span>🟡 Moderate</span><span>🟠 High</span><span>🔴 Critical</span></div>
+<div class="kpis">
+<div class="kpi">Study area<b>Kodagu</b></div>
+<div class="kpi">Prediction window<b>Target: 3–6 h</b></div>
+<div class="kpi">Alert mode<b>Local language</b></div>
+</div>
+</section>
+
+<section class="card">
+<h2>🌦️ Environmental Inputs</h2>
+<div class="muted">Simulated values for prototype demonstration</div>
+<label>Rainfall <span class="val"><span id="rv">120</span> mm</span></label>
+<input id="rain" type="range" min="0" max="250" value="120">
+<label>River level <span class="val"><span id="wv">3.5</span> m</span></label>
+<input id="water" type="range" min="0" max="8" step=".1" value="3.5">
+<label>Soil moisture <span class="val"><span id="sv">70</span>%</span></label>
+<input id="soil" type="range" min="0" max="100" value="70">
+<label>Terrain slope <span class="val"><span id="tv">25</span>°</span></label>
+<input id="terrain" type="range" min="0" max="60" value="25">
+
+<div id="risk" class="risk high">HIGH RISK</div>
+<div id="score" class="score">Risk score: --</div>
+<button onclick="predict()">🤖 RUN FLOOD PREDICTION</button>
+<button onclick="sendAlert()">🚨 GENERATE EMERGENCY ALERT</button>
+<div id="alert" class="alert"></div>
+
+<div class="status"><span>Internet: <b id="net">CONNECTED</b></span><span>Backup: <b>LoRa Gateway</b></span></div>
+<button onclick="network()">📡 Simulate Network Failure</button>
+</section>
+</div>
+
+<section class="card workflow">
+<h2>System Workflow</h2>
+<div>
+<span>Satellite / Weather</span> →
+<span>IoT Sensors</span> →
+<span>Data Fusion</span> →
+<span>Risk Engine</span> →
+<span>Risk Map</span> →
+<span>Emergency Alert</span>
+</div>
+<p class="muted">Prototype note: environmental inputs and the communication fallback are simulated to demonstrate the end-to-end workflow. A production system would connect validated live data sources and field hardware.</p>
+</section>
+</main>
+
+<script>
+const rain=document.getElementById('rain'),water=document.getElementById('water'),soil=document.getElementById('soil'),terrain=document.getElementById('terrain');
+function update(){rv.textContent=rain.value;wv.textContent=Number(water.value).toFixed(1);sv.textContent=soil.value;tv.textContent=terrain.value}
+[rain,water,soil,terrain].forEach(x=>x.addEventListener('input',update));
+function predict(){
+ let s=Math.round(Number(rain.value)/250*35+Number(water.value)/8*30+Number(soil.value)/100*20+Number(terrain.value)/60*15);
+ let r=document.getElementById('risk');
+ r.className='risk '+(s<30?'low':s<50?'moderate':s<75?'high':'critical');
+ r.textContent=s<30?'LOW RISK':s<50?'MODERATE RISK':s<75?'HIGH RISK':'CRITICAL RISK';
+ document.getElementById('score').textContent='Risk score: '+s+'/100';
+}
+function sendAlert(){
+ const a=document.getElementById('alert');a.style.display='block';
+ a.innerHTML='<b>⚠️ FLASH FLOOD WARNING — KODAGU</b><br>High-risk condition detected in the monitored zone.<br><br><b>English:</b> Move to a safer location and follow local emergency instructions.<br><b>ಕನ್ನಡ:</b> ಸುರಕ್ಷಿತ ಸ್ಥಳಕ್ಕೆ ತೆರಳಿ ಮತ್ತು ಸ್ಥಳೀಯ ತುರ್ತು ಸೂಚನೆಗಳನ್ನು ಪಾಲಿಸಿ.';
+}
+function network(){
+ const n=document.getElementById('net');
+ n.textContent=n.textContent==='CONNECTED'?'OFFLINE':'CONNECTED';
+ n.style.color=n.textContent==='OFFLINE'?'#a40000':'';
+}
+update();predict();
+</script>
+</body>
+</html>
